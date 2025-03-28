@@ -1,4 +1,3 @@
-
 export default class TextInput {
   constructor(socket) {
     // Connect to the server
@@ -11,33 +10,33 @@ export default class TextInput {
   }
 
   setupSocketListeners() {
-    this.socket.on('room-join-response', (response) => {
+    this.socket.on("room-join-response", (response) => {
       if (!response.success) {
-        console.error('Failed to join room:', response.message);
+        console.error("Failed to join room:", response.message);
         // Remove the alert, let MenuScene handle the error display
       }
     });
-  
-    this.socket.on('room-create-response', (response) => {
+
+    this.socket.on("room-create-response", (response) => {
       if (!response.success) {
-        console.error('Failed to create room:', response.message);
+        console.error("Failed to create room:", response.message);
         // Remove the alert, let MenuScene handle the error display
       }
     });
   }
-  
+
   showJoinRoomInput() {
     // Create input element
     const inputElement = document.createElement("input");
     inputElement.type = "text";
-    inputElement.placeholder = "Enter room code"; // Added placeholder for better UX
-    inputElement.maxLength = 6; // Assuming room codes are 6 characters
-    inputElement.autocomplete = "off"; // Prevent browser suggestions
+    inputElement.placeholder = "Enter room code";
+    inputElement.maxLength = 6;
+    inputElement.autocomplete = "off";
 
-    // Position - centered horizontally, slightly below middle vertically
+    // Position - centered within the game canvas
     inputElement.style.position = "absolute";
     inputElement.style.left = "50%";
-    inputElement.style.top = "53.5%";
+    inputElement.style.top = "65%";
     inputElement.style.transform = "translate(-50%, -50%)";
 
     // Styling
@@ -78,10 +77,9 @@ export default class TextInput {
       }
     });
 
-    // Add to DOM
-    document.body.appendChild(inputElement);
-
-    // Auto-focus the input for better UX
+    // Add to the game canvas
+    const gameCanvas = document.getElementById("gameCanvas");
+    gameCanvas.appendChild(inputElement);
     inputElement.focus();
 
     // Return the element in case you need to reference it later
@@ -92,14 +90,14 @@ export default class TextInput {
     // Create input element
     const inputElement = document.createElement("input");
     inputElement.type = "text";
-    inputElement.placeholder = "Choose room code"; // Added placeholder for better UX
-    inputElement.maxLength = 6; // Assuming room codes are 6 characters
-    inputElement.autocomplete = "off"; // Prevent browser suggestions
+    inputElement.placeholder = "Choose room code";
+    inputElement.maxLength = 6;
+    inputElement.autocomplete = "off";
 
-    // Position - centered horizontally, slightly below middle vertically
-    inputElement.style.position = "fixed";
+    // Position - centered within the game canvas, slightly lower than join room input
+    inputElement.style.position = "absolute";
     inputElement.style.left = "50%";
-    inputElement.style.top = "70.5%";
+    inputElement.style.top = "85%"; // Adjusted to be below the join room input
     inputElement.style.transform = "translate(-50%, -50%)";
 
     // Styling
@@ -141,35 +139,35 @@ export default class TextInput {
     });
 
     // Add to DOM
-    document.body.appendChild(inputElement);
 
-    // Auto-focus the input for better UX
+    // Add to the game canvas
+    const gameCanvas = document.getElementById("gameCanvas");
+    gameCanvas.appendChild(inputElement);
     inputElement.focus();
 
     // Return the element in case you need to reference it later
     return inputElement;
   }
 
-
   joinRoom(roomCode) {
     // Validate room code
     if (!roomCode || roomCode.length !== 6) {
-      alert('Room code must be 6 characters long');
+      alert("Room code must be 6 characters long");
       return;
     }
 
     // Send join room request to server
-    this.socket.emit('join-room', { roomCode });
+    this.socket.emit("join-room", { roomCode });
   }
 
   createRoom(roomCode) {
     // Validate room code
     if (!roomCode || roomCode.length !== 6) {
-      alert('Room code must be 6 characters long');
+      alert("Room code must be 6 characters long");
       return;
     }
 
     // Send create room request to server
-    this.socket.emit('create-room', { roomCode });
+    this.socket.emit("create-room", { roomCode });
   }
 }

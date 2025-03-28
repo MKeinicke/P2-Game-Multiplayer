@@ -79,9 +79,11 @@ main {
   border: 4px solid red;
   width: 1200px;
   height: 750px;
-  display: block; /* Fix display issue */
-  margin: auto; /* Centers the canvas */
-  background-color: transparent; /* Ensures no black background */
+  display: block;
+  margin: auto;
+  background-color: transparent;
+  position: relative; /* Add this line */
+  overflow: hidden; /* Prevent any overflow */
 }
 
 footer {
