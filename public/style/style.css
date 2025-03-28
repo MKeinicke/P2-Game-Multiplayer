@@ -1,0 +1,94 @@
+html {
+  height: 100vh;
+  background: linear-gradient(
+  0deg,
+  black 0%,
+  #4a0000 50%,  /* Deep maroon */
+  #b30000 100%  /* Blood red */
+  );
+  text-align: center;
+  overflow: hidden; /*hide scrollbar*/
+  justify-content: center;
+  margin-left: auto;
+}
+
+
+.gametitle {
+  color:#00ff00;
+  text-align: center;
+  font-family: "Honk", system-ui;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "MORF" 15, "SHLN" 50;
+  font-size: 50px;
+  
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden; /* Prevents scrolling */
+}
+
+main {
+  flex: 1; /* Makes the main section take up all available space */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes glowEffect {
+  0% {
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(255, 0, 0, 1), 0 0 50px rgba(255, 0, 0, 0.7);
+  }
+}
+
+.box {
+  width: 300px;
+  height: 700px;
+  background: linear-gradient(
+  0deg,
+  rgba(30, 30, 30, 0.9) 0%,  
+  rgba(60, 60, 60, 0.9) 100%
+  );
+  border: 2px solid rgba(179, 0, 0, 0.8);
+  box-shadow: 0 0 10px rgba(179, 0, 0, 0.7);
+  margin: 0 5px;
+  border-radius: 5%;
+  color: white;
+  animation: glowEffect 1.5s ease-in-out infinite alternate;
+}
+
+.boxText {
+  margin-left: 15px;
+  margin-right: 15px;
+  text-align: center;
+  line-height: 1.6;
+  font-family: 'Zombie', sans-serif;
+}
+
+
+#gameCanvas {
+  border: 4px solid red;
+  width: 1200px;
+  height: 750px;
+  display: block; /* Fix display issue */
+  margin: auto; /* Centers the canvas */
+  background-color: transparent; /* Ensures no black background */
+}
+
+footer {
+  background-color: black;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+  margin-top: 90px;
+}

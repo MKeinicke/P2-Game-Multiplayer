@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zombie Survival</title>
+  <link rel="stylesheet" href="/style/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Honk&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script type="module" src="scripts/MainScript.js"></script>
+  <script type="module" src="scripts/scenes/MenuScene.js"></script>
+  <script type="module" src="scripts/scenes/GameScene.js"></script>
+
+</head>
+<body>
+  <header class="gametitle">
+    <p>🧟‍♂️Zombie Suvival🧟‍♂️</p>
+  </header>
+  <main>
+    <div class="box" id="leftBox">
+      <h1>How to play?</h1>
+      <p class="boxText"> 
+        Move around the character, by using the arrows. </p>
+      <p class="boxText">Use Shift + A for specieal skill.</p>
+      <p class="boxText">Work together as a team to survive the zombie waves</p>
+      <p class="boxText">Upgrade hp and abilities in the shop</p>
+    </div>
+    <div id="gameCanvas">
+      <div id="gameContainer"></div>
+    </div>
+    <div class="box" id="rightBox">
+      <h1>The fall of humanity!</h1>
+      <p class="boxText">It started as a secret experiment, 
+        a bioweapon designed to enhance human survival. 
+        But the virus mutated, spreading uncontrollably, 
+        and the infected didn’t stay dead.
+        The city quickly descended into chaos. 
+        The quarantine failed, and panic spread like wildfire. 
+        The undead roam the streets, making these streets a wasteland. 
+        The key to survival is in your hands.</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Made By Group 10. Made in 2025</p>
+  </footer>
+
+</body>
+</html>
