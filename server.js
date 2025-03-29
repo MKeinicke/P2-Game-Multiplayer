@@ -5,7 +5,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Adjust to your frontend's URL
+    origin: "http://localhost:5001", // Adjust to your frontend's URL
     methods: ["GET", "POST"],
   },
 });
@@ -26,31 +26,12 @@ app.get("/", (req, res) => {
 // Socket.io connection handler
 io.on("connection", (socket) => {
   console.log(`New user connected: ${socket.id}`);
-  console.log("line 29");
-  console.log(`Total connections: ${io.engine.clientsCount}`); // Add this line
+  console.log(`Total connections: ${io.engine.clientsCount}`);
 
-  // Handle room creation request
+  // Handle room creation request - simplified
   socket.on("create-room", (data) => {
     const { roomCode } = data;
-
-    // Validate room code
-    if (!roomCode || roomCode.length !== ROOM_ID_LENGTH) {
-      socket.emit("room-create-response", {
-        success: false,
-        message: "Invalid room code. Must be 6 characters.",
-      });
-      return;
-    }
-
-    // Check if room already exists
-    if (activeRooms[roomCode]) {
-      socket.emit("room-create-response", {
-        success: false,
-        message: "Room already exists. Choose a different code.",
-      });
-      return;
-    }
-
+    
     // Create the room with initial state
     activeRooms[roomCode] = {
       players: [
@@ -73,53 +54,13 @@ io.on("connection", (socket) => {
       roomCode: roomCode,
       host: socket.id,
     });
-
+    console.log(`[ROOM CONNECTED] User ${socket.id} connected to room ${roomCode} (as creator)`);
     console.log(`[ROOM CREATED] Room: ${roomCode}, Creator: ${socket.id}`);
   });
 
-  // Handle room joining request
+  // Handle room joining request - simplified
   socket.on("join-room", (data) => {
     const { roomCode } = data;
-
-    // Validate room code
-    if (!roomCode || roomCode.length !== ROOM_ID_LENGTH) {
-      socket.emit("room-join-response", {
-        success: false,
-        message: "Invalid room code. Must be 6 characters.",
-      });
-      return;
-    }
-
-    // Check if room exists
-    if (!activeRooms[roomCode]) {
-      socket.emit("room-join-response", {
-        success: false,
-        message: "Room does not exist.",
-      });
-      return;
-    }
-
-    // Check if player is already in the room
-    if (
-      activeRooms[roomCode].players.some((player) => player.id === socket.id)
-    ) {
-      socket.emit("room-join-response", {
-        success: false,
-        message: "You are already in this room.",
-      });
-      return;
-    }
-
-    // Check room capacity
-    if (
-      activeRooms[roomCode].players.length >= activeRooms[roomCode].maxPlayers
-    ) {
-      socket.emit("room-join-response", {
-        success: false,
-        message: "Room is full.",
-      });
-      return;
-    }
 
     // Add new player to the room
     const newPlayer = {
@@ -127,12 +68,22 @@ io.on("connection", (socket) => {
       character: null,
       ready: false,
     };
+    
+    // Initialize the room if it doesn't exist
+    if (!activeRooms[roomCode]) {
+      activeRooms[roomCode] = {
+        players: [],
+        maxPlayers: MAX_PLAYERS_PER_ROOM,
+        host: socket.id,
+      };
+    }
+    
     activeRooms[roomCode].players.push(newPlayer);
 
     // Join the room
     socket.join(roomCode);
 
-    // Send successful response
+    // Send response with all player information
     socket.emit("room-join-response", {
       success: true,
       roomCode: roomCode,
@@ -144,8 +95,10 @@ io.on("connection", (socket) => {
     socket.to(roomCode).emit("player-joined", {
       player: newPlayer,
     });
-
+    
+    console.log(`[ROOM CONNECTED] User ${socket.id} connected to room ${roomCode}`);
     console.log(`[ROOM JOIN] Player ${socket.id} joined room: ${roomCode}`);
+    console.log(activeRooms[roomCode]);
   });
 
   // Handle character selection
