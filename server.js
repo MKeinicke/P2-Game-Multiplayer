@@ -5,7 +5,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5001", // Adjust to your frontend's URL
+    origin: "http://localhost:5001", // Must match your client's URL
     methods: ["GET", "POST"],
   },
 });
@@ -28,158 +28,161 @@ io.on("connection", (socket) => {
   console.log(`New user connected: ${socket.id}`);
   console.log(`Total connections: ${io.engine.clientsCount}`);
 
-  // Handle room creation request - simplified
+  // Handle room creation
   socket.on("create-room", (data) => {
     const { roomCode } = data;
     
     // Create the room with initial state
     activeRooms[roomCode] = {
-      players: [
-        {
-          id: socket.id,
-          character: null,
-          ready: false,
-        },
-      ],
+      players: [{
+        id: socket.id,
+        character: null,
+        ready: false,
+      }],
       maxPlayers: MAX_PLAYERS_PER_ROOM,
       host: socket.id,
     };
 
-    // Join the room
     socket.join(roomCode);
 
-    // Send successful response with room details
+    // Send response to creator
     socket.emit("room-create-response", {
       success: true,
       roomCode: roomCode,
       host: socket.id,
+      players: activeRooms[roomCode].players,
     });
-    console.log(`[ROOM CONNECTED] User ${socket.id} connected to room ${roomCode} (as creator)`);
+
+    // Sync all clients
+    io.to(roomCode).emit("player-list-update", activeRooms[roomCode].players);
+
     console.log(`[ROOM CREATED] Room: ${roomCode}, Creator: ${socket.id}`);
   });
 
-  // Handle room joining request - simplified
+  // Handle room joining
   socket.on("join-room", (data) => {
     const { roomCode } = data;
+    const room = activeRooms[roomCode];
 
-    // Add new player to the room
+    // Validate room exists
+    if (!room) {
+      socket.emit("room-join-response", { 
+        success: false, 
+        error: "Room not found" 
+      });
+      return;
+    }
+
+    // Validate room isn't full
+    if (room.players.length >= room.maxPlayers) {
+      socket.emit("room-join-response", { 
+        success: false, 
+        error: "Room is full" 
+      });
+      return;
+    }
+
     const newPlayer = {
       id: socket.id,
       character: null,
       ready: false,
     };
     
-    // Initialize the room if it doesn't exist
-    if (!activeRooms[roomCode]) {
-      activeRooms[roomCode] = {
-        players: [],
-        maxPlayers: MAX_PLAYERS_PER_ROOM,
-        host: socket.id,
-      };
-    }
-    
-    activeRooms[roomCode].players.push(newPlayer);
-
-    // Join the room
+    room.players.push(newPlayer);
     socket.join(roomCode);
 
-    // Send response with all player information
+    // Send response to joining player
     socket.emit("room-join-response", {
       success: true,
       roomCode: roomCode,
-      host: activeRooms[roomCode].host,
-      players: activeRooms[roomCode].players,
+      host: room.host,
+      players: room.players,
     });
 
-    // Notify other players in the room about the new player
+    // Notify others about new player
     socket.to(roomCode).emit("player-joined", {
       player: newPlayer,
     });
-    
-    console.log(`[ROOM CONNECTED] User ${socket.id} connected to room ${roomCode}`);
-    console.log(`[ROOM JOIN] Player ${socket.id} joined room: ${roomCode}`);
-    console.log(activeRooms[roomCode]);
+
+    // Sync all clients
+    io.to(roomCode).emit("player-list-update", room.players);
+
+    console.log(`[PLAYER JOINED] ${socket.id} joined ${roomCode}`);
+    console.log(activeRooms[roomCode].players)
   });
 
   // Handle character selection
   socket.on("select-character", (data) => {
     const { roomCode, characterId } = data;
-
-    // Find the room
     const room = activeRooms[roomCode];
     if (!room) return;
 
-    // Find the player
     const player = room.players.find((p) => p.id === socket.id);
     if (!player) return;
 
-    // Update player's character
     player.character = characterId;
 
-    // Broadcast character selection to other players in the room
     socket.to(roomCode).emit("character-selected", {
       playerId: socket.id,
       characterId: characterId,
     });
   });
+  
+  socket.on("request-player-list", (data) => {
+    const { roomCode } = data;
+    if (activeRooms[roomCode]) {
+      socket.emit("player-list-update", activeRooms[roomCode].players);
+    }
+  });
+
+
 
   // Handle player ready status
   socket.on("player-ready", (data) => {
     const { roomCode, isReady } = data;
-
-    // Find the room
     const room = activeRooms[roomCode];
     if (!room) return;
 
-    // Find the player
     const player = room.players.find((p) => p.id === socket.id);
     if (!player) return;
 
-    // Update player's ready status
     player.ready = isReady;
 
-    // Broadcast ready status to other players in the room
     socket.to(roomCode).emit("player-ready-status", {
       playerId: socket.id,
       isReady: isReady,
     });
+    console.log(activeRooms[roomCode].players)
+
 
     // Check if all players are ready
-    const allPlayersReady = room.players.every((p) => p.ready);
-    if (allPlayersReady && room.players.length > 1) {
-      // Broadcast that all players are ready, game can start
+    if (room.players.length > 1 && room.players.every(p => p.ready)) {
       io.to(roomCode).emit("all-players-ready");
     }
   });
 
   // Handle disconnection
   socket.on("disconnect", () => {
-    // Remove player from all rooms
     for (const roomCode in activeRooms) {
-      const roomIndex = activeRooms[roomCode].players.findIndex(
-        (p) => p.id === socket.id
-      );
+      const room = activeRooms[roomCode];
+      const playerIndex = room.players.findIndex(p => p.id === socket.id);
 
-      if (roomIndex !== -1) {
-        // Remove the player
-        activeRooms[roomCode].players.splice(roomIndex, 1);
+      if (playerIndex !== -1) {
+        room.players.splice(playerIndex, 1);
 
-        // If the host disconnects, assign a new host
-        if (
-          socket.id === activeRooms[roomCode].host &&
-          activeRooms[roomCode].players.length > 0
-        ) {
-          activeRooms[roomCode].host = activeRooms[roomCode].players[0].id;
-
-          // Notify remaining players about new host
-          io.to(roomCode).emit("new-host", {
-            newHostId: activeRooms[roomCode].host,
-          });
+        // Reassign host if needed
+        if (socket.id === room.host && room.players.length > 0) {
+          room.host = room.players[0].id;
+          io.to(roomCode).emit("new-host", { newHostId: room.host });
         }
 
-        // If room is empty, remove it
-        if (activeRooms[roomCode].players.length === 0) {
+        // Clean up empty rooms
+        if (room.players.length === 0) {
           delete activeRooms[roomCode];
+        } else {
+          // Notify remaining players
+          io.to(roomCode).emit("player-left", socket.id);
+          io.to(roomCode).emit("player-list-update", room.players);
         }
       }
     }
