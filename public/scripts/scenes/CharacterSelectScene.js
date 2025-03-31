@@ -71,9 +71,12 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     this.character1.on("pointerdown", () => {
       console.log(`Character 1. selected`);
+      this.selectCharacter("character1");
+
     });
     this.character2.on("pointerdown", () => {
       console.log(`Character 2. selected`);
+      this.selectCharacter("character2");
 
     });
 
@@ -168,6 +171,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
       const player = this.players.find((p) => p.id === data.playerId);
       if (player) {
         player.character = data.characterId;
+        if (data.playerId === this.playerId) {
+          this.selectedCharacter = data.characterId;
+          this.resetCharacterSelection();
+        }
         this.updatePlayerList();
       }
     });
