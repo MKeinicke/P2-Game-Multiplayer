@@ -31,18 +31,19 @@ io.on("connection", (socket) => {
   // Handle room creation
   socket.on("create-room", (data) => {
     const { roomCode } = data;
-    
+    let i = 0;
     // Create the room with initial state
     activeRooms[roomCode] = {
       players: [{
         id: socket.id,
+        name: `Player ${++i}`,
         character: null,
         ready: false,
       }],
       maxPlayers: MAX_PLAYERS_PER_ROOM,
       host: socket.id,
     };
-
+    console.log(activeRooms[roomCode].players)
     socket.join(roomCode);
 
     // Send response to creator
@@ -81,9 +82,11 @@ io.on("connection", (socket) => {
       });
       return;
     }
-
+    
+    let i = 1;
     const newPlayer = {
       id: socket.id,
+      name: `Player ${++i}`,
       character: null,
       ready: false,
     };
@@ -192,3 +195,4 @@ io.on("connection", (socket) => {
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+

@@ -113,10 +113,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
         fill: "#ffffff",
       })
       .setOrigin(0, 0);
-
-    // Setup socket listeners
-
-    // Request initial player list
   }
 
   selectCharacter(characterId) {

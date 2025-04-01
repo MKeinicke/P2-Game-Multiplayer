@@ -1,5 +1,7 @@
 import CharacterSelectScene from "/scripts/scenes/CharacterSelectScene.js";
 import MenuScene from "/scripts/scenes/MenuScene.js";
+import GameScene from "/scripts/scenes/GameScene.js";
+
 const config = {
   type: Phaser.AUTO,
   backgroundColor: "#FFFF",
@@ -12,7 +14,8 @@ const config = {
     height: 750,
   },
 
-  scene: [MenuScene, CharacterSelectScene],
+  scene: [MenuScene, CharacterSelectScene, GameScene],
+  pixelArt: true,
   physics: {
     default: "arcade",
     arcade: {
