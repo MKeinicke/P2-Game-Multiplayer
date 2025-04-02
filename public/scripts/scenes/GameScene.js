@@ -4,29 +4,14 @@ import character2 from "/scripts/PlayerCharacters/Character2.js";
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
-
-    
   }
 
   init(data) {
+    this.playerName = data.player.name;
     this.roomCode = data.roomCode;
     this.socket = data.socket;
     this.isHost = data.isHost;
     this.character = data.character; // The selected character from CharacterSelectScene
-
-    this.socket.on("playerPositionUpdate", (data) => {
-      const tableData = [
-        {
-          Player: data.playerName, // Ensure this matches the key sent from the server
-          ID: data.playerId, // Ensure this matches the key sent from the server
-          X: data.x, // Ensure this matches the key sent from the server
-          Y: data.y, // Ensure this matches the key sent from the server
-          animation: data.animation,
-          spritemodel: data.spriteModel,
-        },
-      ];
-      console.table(tableData);
-    });
   }
 
   preload() {
@@ -66,13 +51,23 @@ export default class GameScene extends Phaser.Scene {
 
     // Create local player based on selected character
     this.createLocalPlayer();
-    this.socket.emit("playerPosition", { x: this.player.x, y: this.player.y });
+    this.socket.emit("playerPosition", {
+      roomCode: this.roomCode,
+      playerId: this.socket.id,
+      playerName: this.player.name,
+      x: this.player.x,
+      y: this.player.y,
+      animation: this.player.anims.currentAnim?.key || "idle",
+      spriteModel: this.character,
+    });
+    // Set initial position
+    this.previousX = this.player.x;
+    this.previousY = this.player.y;
 
     this.physics.add.collider(this.player, fencesLayer);
     this.physics.add.collider(this.player, buildingLayer);
     this.physics.add.collider(this.player, boxLayer);
     this.physics.add.collider(this.player, treea01Layer);
-   
 
     // Controls
     this.cursors = this.input.keyboard.addKeys({
@@ -101,30 +96,23 @@ export default class GameScene extends Phaser.Scene {
         texture = "TestPlayer";
         break;
       default:
-        texture = "TestPlayer"; // Fallback (optional)
+        texture = "TestPlayer";
         break;
     }
+
     if (this.character === "character1") {
       this.player = new character1(this, startX, startY, texture, this.socket);
     } else {
       this.player = new character2(this, startX, startY, texture, this.socket);
     }
-
     this.player.isLocalPlayer = true;
-
+    this.player.name = this.playerName
     const camera = this.cameras.main;
     camera.startFollow(this.player);
     camera.setZoom(3);
-
-    // Send initial position to server
-    this.socket.emit("playerPosition", {
-      x: startX,
-      y: startY,
-    });
   }
 
   update() {
-    // Update local player
     if (this.player) {
       this.player.update(this.cursors);
 
@@ -133,12 +121,30 @@ export default class GameScene extends Phaser.Scene {
         this.player.y
       );
       const tile = this.walkthrough.getTileAt(playerTile.x, playerTile.y);
-  
+
       if (tile) {
         this.walkthrough.setAlpha(0.5);
       } else {
         this.walkthrough.setAlpha(1);
-      } 
+      }
+      if (
+        this.player.x !== this.previousX ||
+        this.player.y !== this.previousY
+      ) {
+        this.socket.emit("playerPosition", {
+          roomCode: this.roomCode,
+          playerId: this.socket.id,
+          playerName: this.playerName,
+          x: this.player.x,
+          y: this.player.y,
+          animation: this.player.anims.currentAnim?.key || "idle",
+          spriteModel: this.character,
+        });
+
+        // Update the previous position
+        this.previousX = this.player.x;
+        this.previousY = this.player.y;
+      }
     }
   }
 }

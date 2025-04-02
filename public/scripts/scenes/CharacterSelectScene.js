@@ -72,12 +72,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.character1.on("pointerdown", () => {
       console.log(`Character 1. selected`);
       this.selectCharacter("character1");
-
     });
+    
     this.character2.on("pointerdown", () => {
       console.log(`Character 2. selected`);
       this.selectCharacter("character2");
-
     });
 
 
@@ -191,7 +190,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     // Listen for game start when all players are ready
     this.socket.on("all-players-ready", () => {
+      // Find the current player in the players array
+      const currentPlayer = this.players.find(p => p.id === this.playerId);
+      
       this.scene.start("GameScene", {
+        player: {
+          name: currentPlayer.name // Use the name that was already set when the player joined
+        },
         roomCode: this.roomCode,
         socket: this.socket,
         isHost: this.isHost,
@@ -207,7 +212,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       else if (player.character) status = ` (${player.character})`;
 
       // Shorten the player ID for display
-      const shortId = player.id.substring(0, 6) + "...";
+      const shortId = player.name;
 
       return `${index + 1}. ${shortId}${status}`;
     });

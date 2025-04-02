@@ -31,19 +31,20 @@ io.on("connection", (socket) => {
   // Handle room creation
   socket.on("create-room", (data) => {
     const { roomCode } = data;
-    let i = 0;
     // Create the room with initial state
     activeRooms[roomCode] = {
-      players: [{
-        id: socket.id,
-        name: `Player ${++i}`,
-        character: null,
-        ready: false,
-      }],
+      players: [
+        {
+          id: socket.id,
+          name: `Player 1`,
+          character: null,
+          ready: false,
+        },
+      ],
       maxPlayers: MAX_PLAYERS_PER_ROOM,
       host: socket.id,
     };
-    console.log(activeRooms[roomCode].players)
+    console.log(activeRooms[roomCode].players);
     socket.join(roomCode);
 
     // Send response to creator
@@ -67,30 +68,29 @@ io.on("connection", (socket) => {
 
     // Validate room exists
     if (!room) {
-      socket.emit("room-join-response", { 
-        success: false, 
-        error: "Room not found" 
+      socket.emit("room-join-response", {
+        success: false,
+        error: "Room not found",
       });
       return;
     }
 
     // Validate room isn't full
     if (room.players.length >= room.maxPlayers) {
-      socket.emit("room-join-response", { 
-        success: false, 
-        error: "Room is full" 
+      socket.emit("room-join-response", {
+        success: false,
+        error: "Room is full",
       });
       return;
     }
-    
-    let i = 1;
+
     const newPlayer = {
       id: socket.id,
-      name: `Player ${++i}`,
+      name: `Player ${room.players.length + 1}`,
       character: null,
       ready: false,
     };
-    
+
     room.players.push(newPlayer);
     socket.join(roomCode);
 
@@ -111,7 +111,7 @@ io.on("connection", (socket) => {
     io.to(roomCode).emit("player-list-update", room.players);
 
     console.log(`[PLAYER JOINED] ${socket.id} joined ${roomCode}`);
-    console.log(activeRooms[roomCode].players)
+    console.log(activeRooms[roomCode].players);
   });
 
   // Handle character selection
@@ -130,15 +130,13 @@ io.on("connection", (socket) => {
       characterId: characterId,
     });
   });
-  
+
   socket.on("request-player-list", (data) => {
     const { roomCode } = data;
     if (activeRooms[roomCode]) {
       socket.emit("player-list-update", activeRooms[roomCode].players);
     }
   });
-
-
 
   // Handle player ready status
   socket.on("player-ready", (data) => {
@@ -155,20 +153,37 @@ io.on("connection", (socket) => {
       playerId: socket.id,
       isReady: isReady,
     });
-    console.log(activeRooms[roomCode].players)
-
+    console.log(activeRooms[roomCode].players);
 
     // Check if all players are ready
-    if (room.players.length > 1 && room.players.every(p => p.ready)) {
+    if (room.players.length > 1 && room.players.every((p) => p.ready)) {
       io.to(roomCode).emit("all-players-ready");
     }
+  });
+
+  socket.on("playerPosition", (data) => {
+    const roomCode = data.roomCode;
+    
+    // Use data from the emitted event instead of undefined player object
+    console.table({
+      playerId: socket.id,
+      playerName: data.playerName,
+      x: data.x,
+      y: data.y,
+      animation: data.animation,
+      spriteModel: data.spriteModel,
+    });
+    
+    console.log(`[PLAYER POSITION] Room: ${roomCode}, (${socket.id})`);
+  
+    socket.to(roomCode).emit("playerPositionUpdate", data);
   });
 
   // Handle disconnection
   socket.on("disconnect", () => {
     for (const roomCode in activeRooms) {
       const room = activeRooms[roomCode];
-      const playerIndex = room.players.findIndex(p => p.id === socket.id);
+      const playerIndex = room.players.findIndex((p) => p.id === socket.id);
 
       if (playerIndex !== -1) {
         room.players.splice(playerIndex, 1);
@@ -195,4 +210,3 @@ io.on("connection", (socket) => {
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
-

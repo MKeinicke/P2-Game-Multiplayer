@@ -86,12 +86,16 @@ export default class MenuScene extends Phaser.Scene {
 
   showJoinRoomInput() {
     const inputElement = this.textInput.showJoinRoomInput();
-
+    let isJoining = false;
+    
     inputElement.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && !isJoining) {
+        const inputs = document.querySelectorAll('input[type="text"]');
+        inputElement.remove();
         const roomCode = inputElement.value.trim();
         this.socket.emit("join-room", { roomCode });
-        inputElement.remove();
+        isJoining = true;
+        inputs.forEach((input) => input.remove());
       }
     });
   }
@@ -102,6 +106,7 @@ export default class MenuScene extends Phaser.Scene {
 
     inputElement.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !isCreating) {
+        const inputs = document.querySelectorAll('input[type="text"]');
         inputElement.remove();
         isCreating = true;
         const roomCode = inputElement.value.trim();
@@ -110,6 +115,7 @@ export default class MenuScene extends Phaser.Scene {
           if (!response.success) {
             console.error("Creation failed:", response.message);
           }
+          inputs.forEach((input) => input.remove());
         });
       }
     });
@@ -133,11 +139,6 @@ export default class MenuScene extends Phaser.Scene {
       this.socket.off("room-create-response");
       this.socket.off("room-join-response");
     }
-    
-    // Clean up input elements
-    const inputs = document.querySelectorAll('input[type="text"]');
-    inputs.forEach(input => input.remove());
-    
     super.destroy();
   }
 
